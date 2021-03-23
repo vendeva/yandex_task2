@@ -1,86 +1,87 @@
-function prepareData(entities, { sprintId }) {
-    function sort(arr, property, asc = false) {
-        return arr.sort((a, b) => {
-            const c = Number(`${a[property]}`.match(/\d+/g));
-            const d = Number(`${b[property]}`.match(/\d+/g));
-            if (c > d) {
-                return asc ? 1 : -1;
-            }
-            if (d > c) {
-                return asc ? -1 : 1;
-            }
-            return 0;
-        });
-    }
+function sort(arr, property, asc = false) {
+    return arr.sort((a, b) => {
+        const c = Number(`${a[property]}`.match(/\d+/g));
+        const d = Number(`${b[property]}`.match(/\d+/g));
+        if (c > d) {
+            return asc ? 1 : -1;
+        }
+        if (d > c) {
+            return asc ? -1 : 1;
+        }
+        return 0;
+    });
+}
 
-    function wordCommit(n, words) {
-        const a = Math.abs(n) % 100;
-        const b = Math.abs(n) % 10;
-        if (a > 10 && a < 20) {
-            return words[2];
-        }
-        if (b > 1 && b < 5) {
-            return words[1];
-        }
-        if (b == 1) {
-            return words[0];
-        }
+function wordCommit(n, words) {
+    const a = Math.abs(n) % 100;
+    const b = Math.abs(n) % 10;
+    if (a > 10 && a < 20) {
         return words[2];
     }
-
-    function commitsOfSprint(commits, startAt, finishAt) {
-        return commits.filter((item) => {
-            const { timestamp } = item;
-            return startAt <= timestamp && timestamp <= finishAt;
-        });
+    if (b > 1 && b < 5) {
+        return words[1];
     }
+    if (b == 1) {
+        return words[0];
+    }
+    return words[2];
+}
 
-    function commitsGroupBySize(elements, files) {
-        return elements.reduce(
-            (acc, elem) => {
-                const { summaries } = elem;
-                const commitSize = files
-                    .filter((item) => summaries.includes(item.id))
-                    .map((item) => item.added + item.removed)
-                    .reduce((acc, item) => acc + item, 0);
-                switch (true) {
-                    case commitSize > 1001:
-                        ++acc["> 1001 строки"];
-                        break;
-                    case commitSize > 500 && commitSize <= 1000:
-                        ++acc["501 — 1000 строк"];
-                        break;
-                    case commitSize > 100 && commitSize <= 500:
-                        ++acc["101 — 500 строк"];
-                        break;
-                    case commitSize >= 1 && commitSize <= 100:
-                        ++acc["1 — 100 строк"];
-                        break;
-                    default:
-                        break;
-                }
-                return acc;
-            },
-            {
-                "> 1001 строки": 0,
-                "501 — 1000 строк": 0,
-                "101 — 500 строк": 0,
-                "1 — 100 строк": 0,
-                countCommits: elements.length,
+function commitsOfSprint(commits, startAt, finishAt) {
+    return commits.filter((item) => {
+        const { timestamp } = item;
+        return startAt <= timestamp && timestamp <= finishAt;
+    });
+}
+
+function commitsGroupBySize(elements, files) {
+    return elements.reduce(
+        (acc, elem) => {
+            const { summaries } = elem;
+            const commitQuantity = files
+                .filter((item) => summaries.includes(item.id))
+                .map((item) => item.added + item.removed)
+                .reduce((acc, item) => acc + item, 0);
+            switch (true) {
+                case commitQuantity > 1001:
+                    ++acc["> 1001 строки"];
+                    break;
+                case commitQuantity > 500 && commitQuantity <= 1000:
+                    ++acc["501 — 1000 строк"];
+                    break;
+                case commitQuantity > 100 && commitQuantity <= 500:
+                    ++acc["101 — 500 строк"];
+                    break;
+                case commitQuantity >= 0 && commitQuantity <= 100:
+                    ++acc["1 — 100 строк"];
+                    break;
+                default:
+                    console.log(commitQuantity);
+                    break;
             }
-        );
-    }
+            return acc;
+        },
+        {
+            "> 1001 строки": 0,
+            "501 — 1000 строк": 0,
+            "101 — 500 строк": 0,
+            "1 — 100 строк": 0,
+            countCommits: elements.length,
+        }
+    );
+}
 
-    function renderCategory(rowCount, size) {
-        const current = size[1][rowCount];
-        const prev = size[0][rowCount];
-        return {
-            title: rowCount,
-            valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
-            differenceText: `${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
-        };
-    }
+function renderCategory(rowCount, size) {
+    const current = size[1][rowCount];
+    const prev = size[0] ? size[0][rowCount] : 0;
+    return {
+        title: rowCount,
+        valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
+        differenceText: `${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
+    };
+}
 
+function prepareData(entities, { sprintId }) {
     const currentSprint = entities.find((item) => item.id === sprintId);
     const { name, startAt, finishAt } = currentSprint;
     console.log(currentSprint);
@@ -121,7 +122,7 @@ function prepareData(entities, { sprintId }) {
     }, {});
     const usersVote = users.map((item) => {
         const { id, name, avatar } = item;
-        return { id, name, avatar, valueText: `${userLikes[id]} голосов` };
+        return { id, name, avatar, valueText: `${userLikes[id]} ${wordCommit(userLikes[id], ["голос", "голоса", "голосов"])}` };
     });
 
     const vote = {
@@ -161,7 +162,7 @@ function prepareData(entities, { sprintId }) {
     const sprintsCommit = sprints.map((item) => {
         const { id, name, startAt, finishAt } = item;
         const active = id === sprintId ? { active: true } : {};
-        return { id, hint: name, valueText: `${commitsOfSprint(commits, startAt, finishAt).length}`, ...active };
+        return { title: id, hint: name, value: `${commitsOfSprint(commits, startAt, finishAt).length}`, ...active };
     });
     const chart = {
         alias: "chart",
@@ -177,12 +178,15 @@ function prepareData(entities, { sprintId }) {
     const currentSprintIndex = sprints.findIndex((item) => item.id === sprintId);
     const prevSprintIndex = currentSprintIndex - 1;
     const commitSize = [sprints[prevSprintIndex], currentSprint].reduce((acc, item) => {
-        const { startAt, finishAt } = item;
-        acc = [...acc, commitsGroupBySize(commitsOfSprint(commits, startAt, finishAt), allSummaries)];
+        if (item) {
+            const { startAt, finishAt } = item;
+            acc = [...acc, commitsGroupBySize(commitsOfSprint(commits, startAt, finishAt), allSummaries)];
+        } else acc = [...acc, 0];
         return acc;
     }, []);
+    console.log(commitSize);
     const totalText = commitSize[1]["countCommits"];
-    const differenceText = commitSize[1]["countCommits"] - commitSize[0]["countCommits"];
+    const differenceText = commitSize[1]["countCommits"] - (commitSize[0] ? commitSize[0]["countCommits"] : 0);
     const diagram = {
         alias: "diagram",
         data: {
