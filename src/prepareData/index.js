@@ -1,86 +1,86 @@
-function sort(arr, property, asc = false) {
-    return arr.sort((a, b) => {
-        const c = Number(`${a[property]}`.match(/\d+/g));
-        const d = Number(`${b[property]}`.match(/\d+/g));
-        if (c > d) {
-            return asc ? 1 : -1;
-        }
-        if (d > c) {
-            return asc ? -1 : 1;
-        }
-        return 0;
-    });
-}
+function prepareData(entities, { sprintId }) {
+    function sort(arr, property, asc = false) {
+        return arr.sort((a, b) => {
+            const c = Number(`${a[property]}`.match(/\d+/g));
+            const d = Number(`${b[property]}`.match(/\d+/g));
+            if (c > d) {
+                return asc ? 1 : -1;
+            }
+            if (d > c) {
+                return asc ? -1 : 1;
+            }
+            return 0;
+        });
+    }
 
-function wordCommit(n, words) {
-    const a = Math.abs(n) % 100;
-    const b = Math.abs(n) % 10;
-    if (a > 10 && a < 20) {
+    function wordCommit(n, words) {
+        const a = Math.abs(n) % 100;
+        const b = Math.abs(n) % 10;
+        if (a > 10 && a < 20) {
+            return words[2];
+        }
+        if (b > 1 && b < 5) {
+            return words[1];
+        }
+        if (b == 1) {
+            return words[0];
+        }
         return words[2];
     }
-    if (b > 1 && b < 5) {
-        return words[1];
-    }
-    if (b == 1) {
-        return words[0];
-    }
-    return words[2];
-}
 
-function commitsOfSprint(commits, startAt, finishAt) {
-    return commits.filter((item) => {
-        const { timestamp } = item;
-        return startAt <= timestamp && timestamp <= finishAt;
-    });
-}
+    function commitsOfSprint(commits, startAt, finishAt) {
+        return commits.filter((item) => {
+            const { timestamp } = item;
+            return startAt <= timestamp && timestamp <= finishAt;
+        });
+    }
 
-function commitsGroupBySize(elements, files) {
-    return elements.reduce(
-        (acc, elem) => {
-            const { summaries } = elem;
-            const commitSize = files
-                .filter((item) => summaries.includes(item.id))
-                .map((item) => item.added + item.removed)
-                .reduce((acc, item) => acc + item, 0);
-            switch (true) {
-                case commitSize > 1001:
-                    ++acc["> 1001 строки"];
-                    break;
-                case commitSize > 500 && commitSize <= 1000:
-                    ++acc["501 — 1000 строк"];
-                    break;
-                case commitSize > 100 && commitSize <= 500:
-                    ++acc["101 — 500 строк"];
-                    break;
-                case commitSize >= 1 && commitSize <= 100:
-                    ++acc["1 — 100 строк"];
-                    break;
-                default:
-                    break;
+    function commitsGroupBySize(elements, files) {
+        return elements.reduce(
+            (acc, elem) => {
+                const { summaries } = elem;
+                const commitSize = files
+                    .filter((item) => summaries.includes(item.id))
+                    .map((item) => item.added + item.removed)
+                    .reduce((acc, item) => acc + item, 0);
+                switch (true) {
+                    case commitSize > 1001:
+                        ++acc["> 1001 строки"];
+                        break;
+                    case commitSize > 500 && commitSize <= 1000:
+                        ++acc["501 — 1000 строк"];
+                        break;
+                    case commitSize > 100 && commitSize <= 500:
+                        ++acc["101 — 500 строк"];
+                        break;
+                    case commitSize >= 1 && commitSize <= 100:
+                        ++acc["1 — 100 строк"];
+                        break;
+                    default:
+                        break;
+                }
+                return acc;
+            },
+            {
+                "> 1001 строки": 0,
+                "501 — 1000 строк": 0,
+                "101 — 500 строк": 0,
+                "1 — 100 строк": 0,
+                countCommits: elements.length,
             }
-            return acc;
-        },
-        {
-            "> 1001 строки": 0,
-            "501 — 1000 строк": 0,
-            "101 — 500 строк": 0,
-            "1 — 100 строк": 0,
-            countCommits: elements.length,
-        }
-    );
-}
+        );
+    }
 
-function renderCategory(rowCount, size) {
-    const current = size[1][rowCount];
-    const prev = size[0][rowCount];
-    return {
-        title: rowCount,
-        valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
-        differenceText: `${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
-    };
-}
+    function renderCategory(rowCount, size) {
+        const current = size[1][rowCount];
+        const prev = size[0][rowCount];
+        return {
+            title: rowCount,
+            valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
+            differenceText: `${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
+        };
+    }
 
-function prepareData(entities, { sprintId }) {
     const currentSprint = entities.find((item) => item.id === sprintId);
     const { name, startAt, finishAt } = currentSprint;
     console.log(currentSprint);
@@ -144,7 +144,7 @@ function prepareData(entities, { sprintId }) {
 
     const usersCommit = users.map((item) => {
         const { id, name, avatar } = item;
-        return { id, name, avatar, valueText: `${userCommit[id]}` };
+        return { id, name, avatar, valueText: `${userCommit[id] || 0}` };
     });
 
     const leaders = {
@@ -224,13 +224,14 @@ function prepareData(entities, { sprintId }) {
     };
 
     // console.log(users);
-    // console.log(sprints);
+    console.log(sprints);
     // console.log(leaders);
     // console.log(vote);
     // console.log(chart);
     // console.log(diagram);
     // console.log(data);
-    return [vote, leaders, chart, diagram, activity];
+    const result = [vote, leaders, chart, diagram, activity];
+    return result;
 }
 
 module.exports = { prepareData };
