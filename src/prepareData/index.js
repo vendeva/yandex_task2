@@ -1,7 +1,8 @@
 function sort(arr, property, asc = false) {
     return arr.sort((a, b) => {
-        const c = Number(`${a[property]}`.match(/\d+/g));
-        const d = Number(`${b[property]}`.match(/\d+/g));
+        const isName = !`${a[property]}`.match(/\d+/g);
+        const c = isName ? a[property].toLowerCase() : Number(`${a[property]}`.match(/\d+/g));
+        const d = isName ? b[property].toLowerCase() : Number(`${b[property]}`.match(/\d+/g));
         if (c > d) {
             return asc ? 1 : -1;
         }
@@ -77,7 +78,7 @@ function renderCategory(rowCount, size) {
     return {
         title: rowCount,
         valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
-        differenceText: `${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
+        differenceText: `${current >= prev ? "+" : ""}${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
     };
 }
 
@@ -110,7 +111,7 @@ function prepareData(entities, { sprintId }) {
     sprints = sort(sprints, "id", true);
 
     // Сортировка пользователей по возрастанию id
-    users = sort(users, "id", true);
+    users = sort(users, "name", true);
 
     //Vote
     const userLikes = comments.reduce((acc, item) => {
@@ -146,7 +147,7 @@ function prepareData(entities, { sprintId }) {
 
     const usersCommit = users.map((item) => {
         const { id, name, avatar } = item;
-        return { id, name, avatar, valueText: userCommit[id] || 0 };
+        return { id, name, avatar, valueText: `${userCommit[id] || 0}` };
     });
 
     const leaders = {
@@ -195,7 +196,7 @@ function prepareData(entities, { sprintId }) {
             title: "Размер коммитов",
             subtitle: name,
             totalText: `${totalText} ${wordCommit(totalText, ["коммит", "коммита", "коммитов"])}`,
-            differenceText: `${differenceText} с прошлого спринта`,
+            differenceText: `${differenceText >= 0 ? "+" : ""}${differenceText} с прошлого спринта`,
             categories: [
                 renderCategory("> 1001 строки", commitPrevNext),
                 renderCategory("501 — 1000 строк", commitPrevNext),
@@ -236,7 +237,13 @@ function prepareData(entities, { sprintId }) {
     // console.log(chart);
     // console.log(diagram);
     // console.log(data);
-    const result = [vote, leaders, chart, diagram, activity];
+    const result = [
+        vote,
+        leaders,
+        chart,
+        diagram,
+        // activity
+    ];
     return result;
 }
 
