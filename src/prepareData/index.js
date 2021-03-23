@@ -82,7 +82,7 @@ function renderCategory(rowCount, size) {
 }
 
 function prepareData(entities, { sprintId }) {
-    const currentSprint = entities.find((item) => item.id === sprintId);
+    const currentSprint = entities.find((item) => item.type === "Sprint" && item.id === sprintId);
     const { name, startAt, finishAt } = currentSprint;
     console.log(currentSprint);
     let [users, sprints, comments, commits, allSummaries] = [[], [], [], [], []];
@@ -120,6 +120,7 @@ function prepareData(entities, { sprintId }) {
         }
         return acc;
     }, {});
+
     const usersVote = users.map((item) => {
         const { id, name, avatar } = item;
         return { id, name, avatar, valueText: `${userLikes[id]} ${wordCommit(userLikes[id], ["голос", "голоса", "голосов"])}` };
@@ -145,7 +146,7 @@ function prepareData(entities, { sprintId }) {
 
     const usersCommit = users.map((item) => {
         const { id, name, avatar } = item;
-        return { id, name, avatar, valueText: `${userCommit[id] || 0}` };
+        return { id, name, avatar, valueText: userCommit[id] || 0 };
     });
 
     const leaders = {
@@ -161,8 +162,9 @@ function prepareData(entities, { sprintId }) {
     //Chart
     const sprintsCommit = sprints.map((item) => {
         const { id, name, startAt, finishAt } = item;
-        const active = id === sprintId ? { active: true } : {};
-        return { title: id, hint: name, value: `${commitsOfSprint(commits, startAt, finishAt).length}`, ...active };
+        const itemSprint = { title: `${id}`, hint: name, value: commitsOfSprint(commits, startAt, finishAt).length };
+        if (id === sprintId) itemSprint["active"] = true;
+        return itemSprint;
     });
     const chart = {
         alias: "chart",
@@ -177,16 +179,16 @@ function prepareData(entities, { sprintId }) {
     //Diagram
     const currentSprintIndex = sprints.findIndex((item) => item.id === sprintId);
     const prevSprintIndex = currentSprintIndex - 1;
-    const commitSize = [sprints[prevSprintIndex], currentSprint].reduce((acc, item) => {
+    const commitPrevNext = [sprints[prevSprintIndex], currentSprint].reduce((acc, item) => {
         if (item) {
             const { startAt, finishAt } = item;
             acc = [...acc, commitsGroupBySize(commitsOfSprint(commits, startAt, finishAt), allSummaries)];
         } else acc = [...acc, 0];
         return acc;
     }, []);
-    console.log(commitSize);
-    const totalText = commitSize[1]["countCommits"];
-    const differenceText = commitSize[1]["countCommits"] - (commitSize[0] ? commitSize[0]["countCommits"] : 0);
+    console.log(commitPrevNext);
+    const totalText = commitPrevNext[1]["countCommits"];
+    const differenceText = commitPrevNext[1]["countCommits"] - (commitPrevNext[0] ? commitPrevNext[0]["countCommits"] : 0);
     const diagram = {
         alias: "diagram",
         data: {
@@ -195,10 +197,10 @@ function prepareData(entities, { sprintId }) {
             totalText: `${totalText} ${wordCommit(totalText, ["коммит", "коммита", "коммитов"])}`,
             differenceText: `${differenceText} с прошлого спринта`,
             categories: [
-                renderCategory("> 1001 строки", commitSize),
-                renderCategory("501 — 1000 строк", commitSize),
-                renderCategory("101 — 500 строк", commitSize),
-                renderCategory("1 — 100 строк", commitSize),
+                renderCategory("> 1001 строки", commitPrevNext),
+                renderCategory("501 — 1000 строк", commitPrevNext),
+                renderCategory("101 — 500 строк", commitPrevNext),
+                renderCategory("1 — 100 строк", commitPrevNext),
             ],
         },
     };
