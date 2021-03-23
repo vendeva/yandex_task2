@@ -111,7 +111,7 @@ function prepareData(entities, { sprintId }) {
     sprints = sort(sprints, "id", true);
 
     // Сортировка пользователей по возрастанию id
-    users = sort(users, "name", true);
+    users = sort(users, "id", true);
 
     //Vote
     const userLikes = comments.reduce((acc, item) => {
@@ -237,13 +237,7 @@ function prepareData(entities, { sprintId }) {
     // console.log(chart);
     // console.log(diagram);
     // console.log(data);
-    const result = [
-        vote,
-        leaders,
-        chart,
-        diagram,
-        // activity
-    ];
+    const result = [vote, leaders, chart, diagram, activity];
     return result;
 }
 
