@@ -109,6 +109,7 @@ function prepareData(entities, { sprintId }) {
         if (type === "Summary") allSummaries.push(item);
     });
 
+    const cloneUsers = users.slice();
     // Сортировка спринтов по возрастанию id
     sprints = sort(sprints, "id", true);
 
@@ -147,16 +148,17 @@ function prepareData(entities, { sprintId }) {
         return acc;
     }, {});
 
-    const usersCommit = users.reduce((acc, item) => {
+    let usersCommit = users.reduce((acc, item) => {
         const { id, name, avatar } = item;
         if (userCommit[id]) {
             acc = [...acc, { id, name, avatar, valueText: `${userCommit[id]}` }];
-        } else if (Object.keys(userCommit).length === 0) {
-            acc = [...acc, { id, name, avatar, valueText: "0" }];
         }
         return acc;
     }, []);
 
+    if (Object.keys(userCommit).length === 0) {
+        usersCommit = cloneUsers.map((item) => ({ id: item.id, name: item.name, avatar: item.avatar, valueText: "0" }));
+    }
     const leaders = {
         alias: "leaders",
         data: {
