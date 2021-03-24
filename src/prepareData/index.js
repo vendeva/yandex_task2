@@ -1,8 +1,7 @@
 function sort(arr, property, asc = false) {
     return arr.sort((a, b) => {
-        const isName = !`${a[property]}`.match(/\d+/g);
-        const c = isName ? a[property].toLowerCase() : Number(`${a[property]}`.match(/\d+/g));
-        const d = isName ? b[property].toLowerCase() : Number(`${b[property]}`.match(/\d+/g));
+        const c = Number(`${a[property]}`.match(/\d+/g));
+        const d = Number(`${b[property]}`.match(/\d+/g));
         if (c > d) {
             return asc ? 1 : -1;
         }
@@ -89,7 +88,6 @@ function renderCategory(rowCount, size) {
 function prepareData(entities, { sprintId }) {
     const currentSprint = entities.find((item) => item.type === "Sprint" && item.id === sprintId);
     const { name, startAt, finishAt } = currentSprint;
-    console.log(currentSprint);
     let [users, sprints, comments, commits, allSummaries] = [[], [], [], [], []];
 
     // Формирование массивов данных по типу
@@ -153,46 +151,11 @@ function prepareData(entities, { sprintId }) {
         const { id, name, avatar } = item;
         if (userCommit[id]) {
             acc = [...acc, { id, name, avatar, valueText: `${userCommit[id]}` }];
+        } else if (Object.keys(userCommit).length === 0) {
+            acc = [...acc, { id, name, avatar, valueText: "0" }];
         }
         return acc;
     }, []);
-
-    // console.log(usersCommit);
-    // //Черновое
-    // //--------------------------------------------------------------------
-    // const userCommitChern = commits.reduce((acc, item) => {
-    //     let { author } = item;
-    //     acc[author] = (acc[author] ? acc[author] : 0) + 1;
-    //     return acc;
-    // }, {});
-    // const userAllCommit = users.reduce((acc, item) => {
-    //     return acc + userCommitChern[item.id];
-    // }, 0);
-    // console.log(userAllCommit);
-
-    // const sprintsCommit1 = sprints.reduce((acc, item) => {
-    //     const { startAt, finishAt } = item;
-    //     return acc + commitsOfSprint(commits, startAt, finishAt).length;
-    // }, 0);
-    // console.log(sprintsCommit1);
-
-    // const res = sort(sprints, "id", true).reduce((acc, item) => {
-    //     const { startAt, finishAt } = item;
-    //     const userCommit1 = commitsOfSprint(commits, startAt, finishAt).reduce((acc, item) => {
-    //         let { author } = item;
-    //         acc[author] = (acc[author] ? acc[author] : 0) + 1;
-    //         return acc;
-    //     }, {});
-    //     console.log(item.id, userCommit1);
-    //     const summ = users.reduce((acc, elem) => {
-    //         return acc + userCommit1[elem.id];
-    //     }, 0);
-    //     acc[item.name] = summ;
-    //     return acc;
-    // }, {});
-    // console.log(res);
-
-    //--------------------------------------------------------------------
 
     const leaders = {
         alias: "leaders",
@@ -231,7 +194,7 @@ function prepareData(entities, { sprintId }) {
         } else acc = [...acc, 0];
         return acc;
     }, []);
-    console.log(commitPrevNext);
+
     const totalText = commitPrevNext[1]["countCommits"];
     const differenceText = commitPrevNext[1]["countCommits"] - (commitPrevNext[0] ? commitPrevNext[0]["countCommits"] : 0);
     const diagram = {
@@ -274,13 +237,6 @@ function prepareData(entities, { sprintId }) {
         },
     };
 
-    // console.log(users);
-    console.log(sprints);
-    // console.log(leaders);
-    // console.log(vote);
-    // console.log(chart);
-    // console.log(diagram);
-    // console.log(data);
     const result = [vote, leaders, chart, diagram, activity];
     return result;
 }
