@@ -78,7 +78,11 @@ function renderCategory(rowCount, size) {
     return {
         title: rowCount,
         valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
-        differenceText: `${current >= prev ? "+" : ""}${current - prev} ${wordCommit(current - prev, ["коммит", "коммита", "коммитов"])}`,
+        differenceText: `${current > prev ? "+" : current < prev ? "-" : ""}${Math.abs(current - prev)} ${wordCommit(current - prev, [
+            "коммит",
+            "коммита",
+            "коммитов",
+        ])}`,
     };
 }
 
@@ -145,10 +149,50 @@ function prepareData(entities, { sprintId }) {
         return acc;
     }, {});
 
-    const usersCommit = users.map((item) => {
+    const usersCommit = users.reduce((acc, item) => {
         const { id, name, avatar } = item;
-        return { id, name, avatar, valueText: `${userCommit[id] || 0}` };
-    });
+        if (userCommit[id]) {
+            acc = [...acc, { id, name, avatar, valueText: `${userCommit[id]}` }];
+        }
+        return acc;
+    }, []);
+
+    // console.log(usersCommit);
+    // //Черновое
+    // //--------------------------------------------------------------------
+    // const userCommitChern = commits.reduce((acc, item) => {
+    //     let { author } = item;
+    //     acc[author] = (acc[author] ? acc[author] : 0) + 1;
+    //     return acc;
+    // }, {});
+    // const userAllCommit = users.reduce((acc, item) => {
+    //     return acc + userCommitChern[item.id];
+    // }, 0);
+    // console.log(userAllCommit);
+
+    // const sprintsCommit1 = sprints.reduce((acc, item) => {
+    //     const { startAt, finishAt } = item;
+    //     return acc + commitsOfSprint(commits, startAt, finishAt).length;
+    // }, 0);
+    // console.log(sprintsCommit1);
+
+    // const res = sort(sprints, "id", true).reduce((acc, item) => {
+    //     const { startAt, finishAt } = item;
+    //     const userCommit1 = commitsOfSprint(commits, startAt, finishAt).reduce((acc, item) => {
+    //         let { author } = item;
+    //         acc[author] = (acc[author] ? acc[author] : 0) + 1;
+    //         return acc;
+    //     }, {});
+    //     console.log(item.id, userCommit1);
+    //     const summ = users.reduce((acc, elem) => {
+    //         return acc + userCommit1[elem.id];
+    //     }, 0);
+    //     acc[item.name] = summ;
+    //     return acc;
+    // }, {});
+    // console.log(res);
+
+    //--------------------------------------------------------------------
 
     const leaders = {
         alias: "leaders",
@@ -196,7 +240,7 @@ function prepareData(entities, { sprintId }) {
             title: "Размер коммитов",
             subtitle: name,
             totalText: `${totalText} ${wordCommit(totalText, ["коммит", "коммита", "коммитов"])}`,
-            differenceText: `${differenceText >= 0 ? "+" : ""}${differenceText} с прошлого спринта`,
+            differenceText: `${differenceText > 0 ? "+" : differenceText < 0 ? "-" : ""}${Math.abs(differenceText)} с прошлого спринта`,
             categories: [
                 renderCategory("> 1001 строки", commitPrevNext),
                 renderCategory("501 — 1000 строк", commitPrevNext),
