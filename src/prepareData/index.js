@@ -74,11 +74,14 @@ function commitsGroupBySize(elements, files) {
 function renderCategory(rowCount, size) {
     const current = size[1][rowCount];
     const prev = size[0] ? size[0][rowCount] : 0;
-    const diff = current - prev;
     return {
         title: rowCount,
         valueText: `${current} ${wordCommit(current, ["коммит", "коммита", "коммитов"])}`,
-        differenceText: `${`${diff}`.match(/^([/+]|[-])?\d+/g)} ${wordCommit(diff, ["коммит", "коммита", "коммитов"])}`,
+        differenceText: `${current > prev ? "+" : current < prev ? "-" : ""}${Math.abs(current - prev)} ${wordCommit(current - prev, [
+            "коммит",
+            "коммита",
+            "коммитов",
+        ])}`,
     };
 }
 
@@ -198,7 +201,7 @@ function prepareData(entities, { sprintId }) {
             title: "Размер коммитов",
             subtitle: name,
             totalText: `${totalText} ${wordCommit(totalText, ["коммит", "коммита", "коммитов"])}`,
-            differenceText: `${`${differenceText}`.match(/^([/+]|[-])?\d+/g)} с прошлого спринта`,
+            differenceText: `${differenceText > 0 ? "+" : differenceText < 0 ? "-" : ""}${Math.abs(differenceText)} с прошлого спринта`,
             categories: [
                 renderCategory("> 1001 строки", commitPrevNext),
                 renderCategory("501 — 1000 строк", commitPrevNext),
