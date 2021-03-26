@@ -1,3 +1,4 @@
+// Сортировка массива по убыванию, если передан параметр asc true, то по возрастанию
 function sort(arr, property, asc = false) {
     return arr.sort((a, b) => {
         const c = Number(`${a[property]}`.match(/\d+/g));
@@ -12,6 +13,7 @@ function sort(arr, property, asc = false) {
     });
 }
 
+// Слова в необходимом падеже
 function wordCommit(n, words) {
     const a = Math.abs(n) % 100;
     const b = Math.abs(n) % 10;
@@ -27,6 +29,7 @@ function wordCommit(n, words) {
     return words[2];
 }
 
+// Формирование массива коммитов текущего спринта в соответствующем временном диапазоне
 function commitsOfSprint(commits, startAt, finishAt) {
     return commits.filter((item) => {
         const { timestamp } = item;
@@ -34,6 +37,7 @@ function commitsOfSprint(commits, startAt, finishAt) {
     });
 }
 
+// Статистика внутри спринта по количеству строк для слайда diagram
 function commitsGroupBySize(elements, files) {
     return elements.reduce(
         (acc, elem) => {
@@ -56,7 +60,6 @@ function commitsGroupBySize(elements, files) {
                     ++acc["1 — 100 строк"];
                     break;
                 default:
-                    console.log(commitQuantity);
                     break;
             }
             return acc;
@@ -71,6 +74,7 @@ function commitsGroupBySize(elements, files) {
     );
 }
 
+// Рендер категории для слайда diagram
 function renderCategory(rowCount, size) {
     const current = size[1][rowCount];
     const prev = size[0] ? size[0][rowCount] : 0;
@@ -222,10 +226,12 @@ function prepareData(entities, { sprintId }) {
         const { timestamp } = item;
         const date = new Date(timestamp);
         const day = date.toLocaleString("en", { weekday: "short", timeZone: "Europe/Moscow" }).toLowerCase();
-        const hour = Number(date.toLocaleString("en", { hour12: false, hour: "numeric", timeZone: "Europe/Moscow" }));
-        acc[day][hour] = acc[day][hour] ? ++acc[day][hour] : 1;
+        let hour = Number(date.toLocaleString("en", { hour12: false, hour: "numeric", timeZone: "Europe/Moscow" }));
+        hour = hour !== 24 ? hour : 0;
+        acc[day][hour] = ++acc[day][hour];
         return acc;
     }, dataBase);
+
     const activity = {
         alias: "activity",
         data: {
